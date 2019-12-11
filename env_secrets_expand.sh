@@ -1,14 +1,11 @@
 #!/bin/sh
 
-# See https://github.com/koalaman/shellcheck/wiki/SC2223
-: "${ENV_SECRETS_DIR:=/run/secrets}"
+: ${ENV_SECRETS_DIR:=/run/secrets}
 
 env_secret_debug()
 {
-    if [ -n "$ENV_SECRETS_DEBUG" ]; then
-      # https://unix.stackexchange.com/tags/echo/info
-      # https://github.com/koalaman/shellcheck/wiki/SC2145
-      echo "> $* <"
+    if [ ! -z "$ENV_SECRETS_DEBUG" ]; then
+        echo -e "\033[1m$@\033[0m"
     fi
 }
 
@@ -19,7 +16,7 @@ env_secret_debug()
 # XYZ_DB_PASSWORD={{DOCKER-SECRET:my-db.secret}}
 env_secret_expand() {
     var="$1"
-    eval val=\$"$var"
+    eval val=\$$var
     if secret_name=$(expr match "$val" "DOCKER-SECRET:\([^}]\+\)$"); then
         secret="${ENV_SECRETS_DIR}/${secret_name}"
         env_secret_debug "Secret file for $var: $secret"
@@ -36,11 +33,11 @@ env_secret_expand() {
 env_secrets_expand() {
     for env_var in $(printenv | cut -f1 -d"=")
     do
-        env_secret_expand "$env_var"
+        env_secret_expand $env_var
     done
 
-    if [ -n "$ENV_SECRETS_DEBUG" ]; then
-        printf "\n> Expanded environment variables <"
+    if [ ! -z "$ENV_SECRETS_DEBUG" ]; then
+        echo -e "\n\033[1mExpanded environment variables\033[0m"
         printenv
     fi
 }
