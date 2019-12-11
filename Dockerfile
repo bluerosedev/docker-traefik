@@ -7,7 +7,6 @@ ADD ./env_secrets_expand.sh /usr/local/bin/env_secrets_expand.sh
 ENV S3CMD_VERSION 1.6.1
 ENV SUPERVISOR_VERSION=3.3.1
 ENV DOCKERIZE_VERSION v0.6.0
-ENV BIN_PATH=/usr/local/bin
 
 RUN apk update && \
     apk add --no-cache py-pip py-setuptools ca-certificates openssl dcron && \
@@ -15,7 +14,6 @@ RUN apk update && \
     wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz && \
     tar -C /usr/local/bin -xzvf dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz && \
     rm dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz && \
-    pip install docker && \
     pip install python-magic && \
     pip install supervisor==$SUPERVISOR_VERSION && \
     cd /tmp && \
@@ -32,16 +30,8 @@ ADD ./supervisord.conf /etc/supervisord.conf
 
 ADD ./entrypoint.sh /entrypoint.sh
 ADD ./.s3cfg.tmpl /root/.s3cfg.tmpl
-
-# Add script utils
-ADD ./backup.sh $BIN_PATH/backup.sh
-ADD ./restore.sh $BIN_PATH/restore.sh
-ADD ./shutdown-hook.sh $BIN_PATH/shutdown-hook.sh
-ADD ./kill_superd.py $BIN_PATH/kill_superd.py
-
-RUN chmod +x $BIN_PATH/*
+ADD ./backup.sh /usr/local/bin/backup.sh
+ADD ./restore.sh /usr/local/bin/restore.sh
+ADD ./shutdown-hook.sh /usr/local/bin/shutdown-hook.sh
 
 ADD traefik.toml.tmpl /etc/traefik/
-
-# The default entripoint, from base image (traefik) is overrided
-# ENTRYPOINT ...
